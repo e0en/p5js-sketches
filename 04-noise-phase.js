@@ -1,7 +1,20 @@
+
 function setup() {
   sizeX = windowWidth;
   sizeY = windowHeight;
   createCanvas(sizeX, sizeY);
+  noiseSeed(0);
+
+  sinh_map = new Array(1000);
+  cosh_map = new Array(1000);
+
+  for (i = 0; i < 1000; i++) {
+    sinh_map[i] = sinh(TAU / i - PI);
+  }
+
+  for (i = 0; i < 1000; i++) {
+    cosh_map[i] = cosh(TAU / i);
+  }
 }
 
 function draw() {
@@ -41,18 +54,52 @@ function getPhase(cnt) {
   return (t / fps) * TAU;
 }
 
+noisePhases = new Array(3);
 function drawOrbit(x, y, phase) {
-  noisePhaseX = cos(phase + x);
-  noisePhaseY = sin(phase + y);
+  xPhase = x + phase;
+  yPhase = y + phase;
 
-  localField = noise(8 * noisePhaseX, 8 * noisePhaseY);
+
+  if (xPhase > TAU) {
+    while (xPhase > TAU) {
+      xPhase -= TAU;
+    }
+  }
+
+  if (yPhase > TAU) {
+    while (yPhase > TAU) {
+      yPhase -= TAU;
+    }
+  }
+
+  toroidalCoordinate(xPhase, yPhase, 1.0, noisePhases);
+
+  localField = noise(8 * noisePhases[0], 8 * noisePhases[1], 8 * noisePhases[2]);
   localField = sigmoid(10 * (localField - 0.5));
 
   fill(localField * 255);
-  noStroke();
   ellipse(0, 0, localField * 2 * orbitSize);
 }
 
 function sigmoid(x) {
   return 1.0 / (1.0 + exp(-x));
 }
+
+// check https://en.wikipedia.org/wiki/Toroidal_coordinates
+function toroidalCoordinate(phase1, phase2, tau, result) {
+  tau_idx = int(tau / TAU * 1000) % 1000;
+  denom = cosh_map[tau_idx] - cos(phase1 - PI);
+  common_coeff = sinh_map[tau_idx] / denom;
+  result[0] = common_coeff * cos(phase2);
+  result[1] = common_coeff * sin(phase2);
+  result[2] = sin(phase1 - PI) / denom;
+}
+
+function sinh(x) {
+  return (exp(x) - exp(-x)) / 2.0;
+}
+
+function cosh(x) {
+  return (exp(x) + exp(-x)) / 2.0;
+}
+
