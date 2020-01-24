@@ -19,39 +19,48 @@ function drawAxis(scale) {
   centerX = 0.5 * width
   centerY = 0.5 * height
 
+  screenSize = max(width, height)
+
   gridStep = 5
-  gridSize = 0.1 * height * scale
+  gridSize = 0.1 * screenSize * scale
   if (scale <= 0) {
     return
   }
 
-  strokeColor = 127
-
-  while (gridSize > 0.5 * height) {
+  while (gridSize > 0.5 * screenSize) {
     gridSize /= gridStep
   }
+
   console.log(scale, gridSize)
 
-  while (gridSize > 0.01 * height) {
+  thickness = 4
+  strokeColor = min(255 * Math.sqrt(gridSize / screenSize), 255)
+
+  while (gridSize > 0.01 * screenSize) {
     // draw sub grids
+    strokeWeight(thickness)
     stroke(strokeColor)
-    for (var xi = centerX; xi < width; xi += gridSize) {
+    for (var xi = centerX + gridSize; xi < width; xi += gridSize) {
       line(xi, 0.0, xi, height)
     }
-    for (var xi = centerX; xi > 0; xi -= gridSize) {
+    for (var xi = centerX - gridSize; xi > 0; xi -= gridSize) {
       line(xi, 0.0, xi, height)
     }
-    for (var yi = centerY; yi < height; yi += gridSize) {
+    for (var yi = centerY + gridSize; yi < height; yi += gridSize) {
       line(0.0, yi, width, yi)
     }
-    for (var yi = centerY; yi > 0; yi -= gridSize) {
+    for (var yi = centerY - gridSize; yi > 0; yi -= gridSize) {
       line(0.0, yi, width, yi)
     }
     gridSize /= gridStep
-    strokeColor *= 0.8
+    strokeColor = min(255 * Math.sqrt(gridSize / screenSize), 255)
+    if (thickness > 1.0) {
+      thickness *= 0.5
+    }
   }
 
   // draw the main gridlines
+  strokeWeight(1)
   stroke(255)
   line(0.0, centerY, width, centerY)
   line(centerX, 0.0, centerX, height)
